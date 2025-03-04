@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				status: {
+					applied: '#4F46E5',
+					interviewing: '#10B981',
+					offer: '#F59E0B',
+					accepted: '#16A34A',
+					declined: '#DC2626',
+					rejected: '#B91C1C',
+					error: '#EF4444',
 				}
 			},
 			borderRadius: {
@@ -84,11 +94,32 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				fadeIn: {
+					from: { opacity: '0' },
+					to: { opacity: '1' },
+				},
+				slideUp: {
+					from: { transform: 'translateY(10px)', opacity: '0' },
+					to: { transform: 'translateY(0)', opacity: '1' },
+				},
+				pulse: {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.5' },
+				},
+				float: {
+					'0%': { transform: 'translateY(0px)' },
+					'50%': { transform: 'translateY(-5px)' },
+					'100%': { transform: 'translateY(0px)' },
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fadeIn 0.3s ease-out',
+				'slide-up': 'slideUp 0.4s ease-out',
+				'pulse-slow': 'pulse 3s infinite',
+				'float': 'float 6s ease-in-out infinite',
 			}
 		}
 	},
