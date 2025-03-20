@@ -1,4 +1,3 @@
-
 export type Application = {
   id: string;
   created_at: string;
@@ -13,26 +12,26 @@ export type Application = {
   is_archived: boolean;
 };
 
-export type ApplicationStatus = 
-  | 'Applied'
-  | 'Screening call'
-  | 'Interviewing'
-  | 'Waiting offer'
-  | 'Got Offer'
-  | 'Accepted!'
-  | 'Declined'
-  | 'Rejected'
-  | 'Error';
+export type ApplicationStatus =
+  | "Applied"
+  | "Screening call"
+  | "Interviewing"
+  | "Waiting offer"
+  | "Got Offer"
+  | "Accepted!"
+  | "Declined"
+  | "Rejected"
+  | "Error";
 
 export type StatusColor = {
   [key in ApplicationStatus]: {
     bg: string;
     text: string;
     dot: string;
-  }
+  };
 };
 
-export type StatusGroup = 'Active' | 'Rejected' | 'Archived';
+export type StatusGroup = "Active" | "Rejected" | "Archived";
 
 export type ApplicationSummary = {
   totalApplications: number;

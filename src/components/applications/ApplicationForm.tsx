@@ -1,9 +1,8 @@
-
-import { useState, useEffect } from 'react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -11,112 +10,161 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
+} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { useToast } from '@/hooks/use-toast';
-import { CalendarIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { Application, ApplicationStatus } from '@/types';
-import { useNavigate } from 'react-router-dom';
+} from "@/components/ui/popover";
+import { useToast } from "@/hooks/use-toast";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { Application, ApplicationStatus } from "@/types";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 
-const applicationFormSchema = z.object({
-  company: z.string().min(1, 'Company name is required'),
-  position: z.string().min(1, 'Position is required'),
-  location: z.string().min(1, 'Location is required'),
-  date_applied: z.date({
-    required_error: 'Date applied is required',
-  }),
-  status: z.enum([
-    'Applied',
-    'Screening call',
-    'Interviewing',
-    'Waiting offer',
-    'Got Offer',
-    'Accepted!',
-    'Declined',
-    'Rejected',
-    'Error',
-  ]),
-  url: z.string().url('Please enter a valid URL').or(z.string().length(0)).optional(),
+// Define all possible application statuses
+const allStatuses: ApplicationStatus[] = [
+  "Applied",
+  "Screening call",
+  "Interviewing",
+  "Waiting offer",
+  "Got Offer",
+  "Accepted!",
+  "Declined",
+  "Rejected",
+  "Error",
+];
+
+const formSchema = z.object({
+  company: z.string().min(1, "Company is required"),
+  position: z.string().min(1, "Position is required"),
+  location: z.string().min(1, "Location is required"),
+  date_applied: z.date(),
+  status: z.enum(allStatuses as [string, ...string[]]),
+  url: z.string().optional(),
   description: z.string().optional(),
 });
 
-type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
 interface ApplicationFormProps {
-  defaultValues?: Partial<ApplicationFormValues>;
-  onSubmit: (values: ApplicationFormValues) => Promise<void>;
-  isLoading?: boolean;
-  type: 'create' | 'edit';
+  onSubmit: (values: FormValues) => Promise<void>;
+  type: "create" | "edit";
+  defaultValues?: Partial<FormValues>;
 }
 
-const statusOptions: ApplicationStatus[] = [
-  'Applied',
-  'Screening call',
-  'Interviewing',
-  'Waiting offer',
-  'Got Offer',
-  'Accepted!',
-  'Declined',
-  'Rejected',
-  'Error',
-];
-
-const ApplicationForm = ({ 
-  defaultValues, 
+const ApplicationForm = ({
   onSubmit,
-  isLoading = false,
-  type
+  type,
+  defaultValues,
 }: ApplicationFormProps) => {
   const [isPending, setIsPending] = useState(false);
+  const [availableStatuses, setAvailableStatuses] =
+    useState<ApplicationStatus[]>(allStatuses);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const form = useForm<ApplicationFormValues>({
-    resolver: zodResolver(applicationFormSchema),
-    defaultValues: defaultValues || {
-      company: '',
-      position: '',
-      location: '',
+  // Fetch unique statuses from existing applications
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("applications")
+          .select("status")
+          .order("status");
+
+        if (error) throw error;
+
+        if (Array.isArray(data) && data.length > 0) {
+          // Extract unique statuses
+          const uniqueStatuses = Array.from(
+            new Set(data.map((item) => item.status))
+          ) as ApplicationStatus[];
+
+          // Ensure common statuses are always available
+          const commonStatuses: ApplicationStatus[] = [
+            "Applied",
+            "Interviewing",
+            "Accepted!",
+            "Rejected",
+          ];
+
+          const mergedStatuses = Array.from(
+            new Set([...uniqueStatuses, ...commonStatuses])
+          ) as ApplicationStatus[];
+
+          setAvailableStatuses(mergedStatuses);
+        }
+      } catch (error) {
+        console.error("Error fetching statuses:", error);
+        // Fallback to default statuses
+        setAvailableStatuses(allStatuses);
+      }
+    };
+
+    fetchStatuses();
+  }, []);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      company: "",
+      position: "",
+      location: "",
       date_applied: new Date(),
-      status: 'Applied',
-      url: '',
-      description: '',
+      status: "Applied",
+      url: "",
+      description: "",
+      ...defaultValues,
     },
   });
 
-  const handleSubmit = async (values: ApplicationFormValues) => {
+  const handleSubmit = async (values: FormValues) => {
     try {
       setIsPending(true);
-      await onSubmit(values);
+
+      // Normalizar la fecha para evitar problemas de zona horaria
+      const normalizedValues = {
+        ...values,
+        date_applied: new Date(
+          values.date_applied.getFullYear(),
+          values.date_applied.getMonth(),
+          values.date_applied.getDate(),
+          12, // Establecer la hora a mediodía
+          0,
+          0
+        ),
+      };
+
+      await onSubmit(normalizedValues);
+      form.reset();
       toast({
-        title: type === 'create' ? 'Application created' : 'Application updated',
-        description: type === 'create' 
-          ? 'Your application has been created successfully.' 
-          : 'Your application has been updated successfully.',
+        title:
+          type === "create" ? "Application created" : "Application updated",
+        description:
+          type === "create"
+            ? "Your application has been created successfully."
+            : "Your application has been updated successfully.",
       });
-      navigate('/applications');
+      navigate("/applications");
     } catch (error) {
-      console.error('Error submitting application:', error);
+      console.error("Error submitting application:", error);
       toast({
-        title: 'Error',
-        description: 'There was a problem submitting your application.',
-        variant: 'destructive',
+        title: "Error",
+        description: "There was a problem submitting your application.",
+        variant: "destructive",
       });
     } finally {
       setIsPending(false);
@@ -134,7 +182,7 @@ const ApplicationForm = ({
               <FormItem>
                 <FormLabel>Company</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter company name" {...field} />
+                  <Input placeholder="Company name" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -148,7 +196,7 @@ const ApplicationForm = ({
               <FormItem>
                 <FormLabel>Position</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter position" {...field} />
+                  <Input placeholder="Job title" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -162,7 +210,7 @@ const ApplicationForm = ({
               <FormItem>
                 <FormLabel>Location</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter location" {...field} />
+                  <Input placeholder="City, Country or Remote" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -174,7 +222,7 @@ const ApplicationForm = ({
             name="date_applied"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Date Applied</FormLabel>
+                <FormLabel>Application Date</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -188,7 +236,7 @@ const ApplicationForm = ({
                         {field.value ? (
                           format(field.value, "PPP")
                         ) : (
-                          <span>Pick a date</span>
+                          <span>Select a date</span>
                         )}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
@@ -199,6 +247,9 @@ const ApplicationForm = ({
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
                       initialFocus
                     />
                   </PopoverContent>
@@ -220,11 +271,11 @@ const ApplicationForm = ({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue placeholder="Select a status" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {statusOptions.map((status) => (
+                    {availableStatuses.map((status) => (
                       <SelectItem key={status} value={status}>
                         {status}
                       </SelectItem>
@@ -241,9 +292,13 @@ const ApplicationForm = ({
             name="url"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>URL (optional)</FormLabel>
+                <FormLabel>Job URL</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://..." {...field} />
+                  <Input
+                    placeholder="https://example.com/job"
+                    type="url"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -256,11 +311,11 @@ const ApplicationForm = ({
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description (optional)</FormLabel>
+              <FormLabel>Description</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Add any notes or details about this application..."
-                  className="min-h-32"
+                  placeholder="Additional details about the application"
+                  className="resize-none"
                   {...field}
                 />
               </FormControl>
@@ -273,13 +328,17 @@ const ApplicationForm = ({
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate('/applications')}
-            disabled={isPending || isLoading}
+            onClick={() => navigate("/applications")}
+            disabled={isPending}
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isPending || isLoading}>
-            {isPending || isLoading ? 'Saving...' : type === 'create' ? 'Create Application' : 'Update Application'}
+          <Button type="submit" disabled={isPending}>
+            {isPending
+              ? "Saving..."
+              : type === "create"
+              ? "Create Application"
+              : "Update Application"}
           </Button>
         </div>
       </form>

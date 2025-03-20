@@ -1,9 +1,14 @@
-
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextType {
   user: User | null;
@@ -23,15 +28,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Obtener la sesión inicial cuando el componente se monta
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user || null);
       setIsLoading(false);
     });
 
-    // Escuchar cambios en la autenticación
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user || null);
       setIsLoading(false);
@@ -45,20 +50,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+      console.log("URL de redirección:", redirectUrl);
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: redirectUrl,
+          queryParams: {
+            // Forzar la selección de cuenta
+            prompt: "select_account",
+          },
         },
       });
-      
-      if (error) throw error;
+
+      if (error) {
+        console.error("Error en signInWithGoogle:", error);
+        throw error;
+      }
+
+      console.log("Redirección iniciada:", data);
     } catch (error) {
-      console.error('Error signing in with Google:', error);
+      console.error("Error signing in with Google:", error);
       toast({
-        title: 'Error de inicio de sesión',
-        description: 'No se pudo iniciar sesión con Google.',
-        variant: 'destructive',
+        title: "Error de inicio de sesión",
+        description: "No se pudo iniciar sesión con Google.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -70,13 +88,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      navigate('/login');
+      navigate("/login");
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
       toast({
-        title: 'Error al cerrar sesión',
-        description: 'No se pudo cerrar la sesión correctamente.',
-        variant: 'destructive',
+        title: "Error al cerrar sesión",
+        description: "No se pudo cerrar la sesión correctamente.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -84,7 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signInWithGoogle, signOut }}>
+    <AuthContext.Provider
+      value={{ user, session, isLoading, signInWithGoogle, signOut }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -93,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 551.15 547.02">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#radial-gradient);
+        stroke-width: 0px;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke: #3dffd8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 26px;
+      }
+    </style>
+    <radialGradient id="radial-gradient" cx="493.67" cy="135.98" fx="493.67" fy="135.98" r="544.51" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3b8cff"/>
+      <stop offset="1" stop-color="#9178a1"/>
+    </radialGradient>
+  </defs>
+  <circle class="cls-1" cx="275.58" cy="273.51" r="260.65"/>
+  <g>
+    <line class="cls-2" x1="127.5" y1="212.25" x2="151.31" y2="212.25"/>
+    <line class="cls-2" x1="319.02" y1="212.25" x2="442.84" y2="212.25"/>
+    <line class="cls-2" x1="189.75" y1="212.25" x2="282.61" y2="212.25"/>
+    <line class="cls-2" x1="127.11" y1="165.57" x2="361.91" y2="165.57"/>
+    <line class="cls-2" x1="127.31" y1="331.87" x2="330.27" y2="331.87"/>
+    <line class="cls-2" x1="127.8" y1="379.55" x2="272.06" y2="379.55"/>
+    <line class="cls-2" x1="310.24" y1="379.55" x2="390.01" y2="379.55"/>
+    <line class="cls-2" x1="239.86" y1="284.19" x2="367.26" y2="284.19"/>
+    <line class="cls-2" x1="127.49" y1="284.19" x2="202.5" y2="284.19"/>
+  </g>
+</svg>

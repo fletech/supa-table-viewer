@@ -1,14 +1,20 @@
-
-import { useState, useEffect } from 'react';
-import Header from '@/components/layout/Header';
-import SummaryCard from '@/components/dashboard/SummaryCard';
-import ApplicationsChart from '@/components/dashboard/ApplicationsChart';
-import { FileBarChart, Building, MapPin, ListChecks, Archive, Ban } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-import { Application, ApplicationSummary } from '@/types';
-import { useAuth } from '@/contexts/AuthContext';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from "react";
+import Header from "@/components/layout/Header";
+import SummaryCard from "@/components/dashboard/SummaryCard";
+import ApplicationsChart from "@/components/dashboard/ApplicationsChart";
+import {
+  FileBarChart,
+  Building,
+  MapPin,
+  ListChecks,
+  Archive,
+  Ban,
+} from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { Application, ApplicationSummary } from "@/types";
+import { useAuth } from "@/contexts/AuthContext";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -29,23 +35,37 @@ const Dashboard = () => {
       try {
         setIsLoading(true);
         if (!user?.id) return;
-        
+
         const { data, error } = await supabase
-          .from('applications')
-          .select('*')
-          .eq('user_id', user.id);
+          .from("applications")
+          .select("*")
+          .eq("user_id", user.id);
 
         if (error) throw error;
 
-        setApplications(data || []);
+        const typedData = data as unknown as Application[];
+        setApplications(typedData || []);
 
-        // Calculate summary
-        const totalApplications = data?.length || 0;
-        const positionsApplied = new Set(data?.map(app => app.position)).size;
-        const activeApplications = data?.filter(app => !app.is_archived && app.status !== 'Rejected' && app.status !== 'Declined').length || 0;
-        const rejectedApplications = data?.filter(app => app.status === 'Rejected' || app.status === 'Declined').length || 0;
-        const archivedApplications = data?.filter(app => app.is_archived).length || 0;
-        const offerReceived = data?.filter(app => app.status === 'Got Offer' || app.status === 'Accepted!').length || 0;
+        const totalApplications = typedData?.length || 0;
+        const positionsApplied = new Set(typedData?.map((app) => app.position))
+          .size;
+        const activeApplications =
+          typedData?.filter(
+            (app) =>
+              !app.is_archived &&
+              app.status !== "Rejected" &&
+              app.status !== "Declined"
+          ).length || 0;
+        const rejectedApplications =
+          typedData?.filter(
+            (app) => app.status === "Rejected" || app.status === "Declined"
+          ).length || 0;
+        const archivedApplications =
+          typedData?.filter((app) => app.is_archived).length || 0;
+        const offerReceived =
+          typedData?.filter(
+            (app) => app.status === "Got Offer" || app.status === "Accepted!"
+          ).length || 0;
 
         setSummary({
           totalApplications,
@@ -55,13 +75,12 @@ const Dashboard = () => {
           archivedApplications,
           offerReceived,
         });
-        
       } catch (error) {
-        console.error('Error fetching applications:', error);
+        console.error("Error fetching applications:", error);
         toast({
-          title: 'Error',
-          description: 'Failed to load your applications.',
-          variant: 'destructive',
+          title: "Error",
+          description: "Failed to load your applications.",
+          variant: "destructive",
         });
       } finally {
         setIsLoading(false);
@@ -75,38 +94,40 @@ const Dashboard = () => {
     <div className="flex flex-col min-h-screen">
       <Header title="Dashboard" />
       <main className="flex-1 container py-6 space-y-8 animate-fade-in">
-        <h2 className="text-3xl font-bold tracking-tight">Summary of applications</h2>
-        
+        <h2 className="text-3xl font-bold tracking-tight">
+          Summary of applications
+        </h2>
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <SummaryCard 
-            title="Total applications made" 
-            value={isLoading ? '-' : summary.totalApplications.toString()}
-            icon={<FileBarChart className="h-5 w-5" />} 
+          <SummaryCard
+            title="Total applications made"
+            value={isLoading ? "-" : summary.totalApplications.toString()}
+            icon={<FileBarChart className="h-5 w-5" />}
           />
-          <SummaryCard 
-            title="Positions applied" 
-            value={isLoading ? '-' : summary.positionsApplied.toString()} 
-            icon={<Building className="h-5 w-5" />} 
+          <SummaryCard
+            title="Positions applied"
+            value={isLoading ? "-" : summary.positionsApplied.toString()}
+            icon={<Building className="h-5 w-5" />}
           />
-          <SummaryCard 
-            title="Active applications" 
-            value={isLoading ? '-' : summary.activeApplications.toString()} 
-            icon={<ListChecks className="h-5 w-5" />} 
+          <SummaryCard
+            title="Active applications"
+            value={isLoading ? "-" : summary.activeApplications.toString()}
+            icon={<ListChecks className="h-5 w-5" />}
           />
-          <SummaryCard 
-            title="Offers received" 
-            value={isLoading ? '-' : summary.offerReceived.toString()} 
-            icon={<MapPin className="h-5 w-5" />} 
+          <SummaryCard
+            title="Offers received"
+            value={isLoading ? "-" : summary.offerReceived.toString()}
+            icon={<MapPin className="h-5 w-5" />}
           />
-          <SummaryCard 
-            title="Rejected applications" 
-            value={isLoading ? '-' : summary.rejectedApplications.toString()} 
-            icon={<Ban className="h-5 w-5" />} 
+          <SummaryCard
+            title="Rejected applications"
+            value={isLoading ? "-" : summary.rejectedApplications.toString()}
+            icon={<Ban className="h-5 w-5" />}
           />
-          <SummaryCard 
-            title="Archived applications" 
-            value={isLoading ? '-' : summary.archivedApplications.toString()} 
-            icon={<Archive className="h-5 w-5" />} 
+          <SummaryCard
+            title="Archived applications"
+            value={isLoading ? "-" : summary.archivedApplications.toString()}
+            icon={<Archive className="h-5 w-5" />}
           />
         </div>
 
@@ -124,15 +145,15 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
-            <ApplicationsChart 
-              applications={applications} 
-              title="Candidatures by status" 
-              type="status" 
+            <ApplicationsChart
+              applications={applications}
+              title="Candidatures by status"
+              type="status"
             />
-            <ApplicationsChart 
-              applications={applications} 
-              title="Candidatures by date" 
-              type="date" 
+            <ApplicationsChart
+              applications={applications}
+              title="Candidatures by date"
+              type="date"
               period={30}
             />
           </div>
