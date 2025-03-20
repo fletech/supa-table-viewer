@@ -21,7 +21,7 @@ interface ApplicationsChartProps {
   applications: Application[];
   title: string;
   type: "status" | "date";
-  period?: number; // number of days to look back (for date charts)
+  period?: number;
   className?: string;
 }
 
@@ -33,14 +33,21 @@ const ApplicationsChart = ({
   className,
 }: ApplicationsChartProps) => {
   const isMobile = useIsMobile();
-  //TODO: Hacer el chart mas limpio, sin ejes, mostrar colores por incrementos
+  // El chart se ve muy cargado con tantas líneas... mejorar esto:
+  // - Quitar el grid o hacerlo mas sutil (opacity 0.1 tal vez)
+  // - TODO URGENT: arreglar el bug del tooltip en mobile (overflow)
+  // - Falta normalizar fechas para timezone! (llegan UTC y muestra día -1)
+  // Ver si esta lib soporta barras con gradiente... quedaria mejor
+
   const chartData = useMemo(() => {
+    // FIXME: refactor esto en función separada, está muy largo
     if (type === "status") {
       const statusGroups: Record<string, number> = {};
       const archivedGroups: Record<string, number> = {};
 
       applications.forEach((app) => {
         const key = app.status;
+        // esto funciona pero no me agrada mucho
         if (app.is_archived) {
           archivedGroups[key] = (archivedGroups[key] || 0) + 1;
         } else {
@@ -58,7 +65,6 @@ const ApplicationsChart = ({
         Archived: archivedGroups[status] || 0,
       }));
     } else {
-      // Chart by date
       const today = new Date();
       const startDate = subDays(today, period);
 
@@ -72,7 +78,6 @@ const ApplicationsChart = ({
         count: 0,
       }));
 
-      // Count applications per date
       applications.forEach((app) => {
         const appDate = parseISO(app.date_applied);
         if (appDate >= startDate && appDate <= today) {
@@ -81,6 +86,8 @@ const ApplicationsChart = ({
           );
           if (index !== -1) {
             dateData[index].count += 1;
+            // ATENCION: contar también por tipo?
+            // dateData[index][app.status] = (dateData[index][app.status] || 0) + 1;
           }
         }
       });
