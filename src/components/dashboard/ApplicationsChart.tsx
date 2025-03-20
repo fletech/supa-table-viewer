@@ -33,7 +33,7 @@ const ApplicationsChart = ({
   className,
 }: ApplicationsChartProps) => {
   const isMobile = useIsMobile();
-
+  //TODO: Hacer el chart mas limpio, sin ejes, mostrar colores por incrementos
   const chartData = useMemo(() => {
     if (type === "status") {
       const statusGroups: Record<string, number> = {};
