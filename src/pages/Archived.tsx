@@ -17,7 +17,6 @@ const Archived = () => {
   const { applications, isLoading, isBackgroundLoading, refreshApplications } =
     useApplications();
 
-  // Filter only archived applications
   const archivedApplications = applications.filter((app) => app.is_archived);
 
   const handleRestore = async (id: string) => {

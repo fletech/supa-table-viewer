@@ -26,7 +26,6 @@ import AuthCallback from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
-// Componente para proteger rutas que requieren autenticación
 const ProtectedRoute = () => {
   const { user, isLoading } = useAuth();
 

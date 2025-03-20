@@ -52,9 +52,7 @@ async function main() {
     fs.writeFileSync(updatedSqlFilePath, sqlContent);
 
     console.log(`Archivo SQL actualizado guardado en: ${updatedSqlFilePath}`);
-    console.log(
-      "Ahora puedes ejecutar este archivo en tu base de datos Supabase."
-    );
+    console.log("Ahora se puede ejecutar este archivo en Supabase.");
   } catch (error) {
     console.error("Error:", error.message);
     process.exit(1);

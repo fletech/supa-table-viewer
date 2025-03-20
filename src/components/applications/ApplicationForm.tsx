@@ -34,7 +34,6 @@ import { Application, ApplicationStatus } from "@/types";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 
-// Define all possible application statuses
 const allStatuses: ApplicationStatus[] = [
   "Applied",
   "Screening call",
